@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Webfish Airlines ATC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        .login, .join-lobby {
+            max-width: 400px;
+            margin: auto;
+        }
+        .login h2, .join-lobby h2 {
+            text-align: center;
+        }
+        .login form, .join-lobby form {
+            display: flex;
+            flex-direction: column;
+        }
+        .login input, .join-lobby input {
+            margin-bottom: 15px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .login button, .join-lobby button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .message {
+            text-align: center;
+            font-weight: bold;
+            color: green;
+        }
+        .error {
+            text-align: center;
+            font-weight: bold;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login" id="login">
+    <h2>Login</h2>
+    <form id="loginForm">
+        <input type="text" id="username" placeholder="Username" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+    </form>
+</div>
+
+<div class="join-lobby" id="joinLobby" style="display: none;">
+    <h2>Join Lobby</h2>
+    <form id="joinLobbyForm">
+        <input type="text" id="lobbyCode" placeholder="Lobby Code" required />
+        <button type="submit">Join Lobby</button>
+    </form>
+    <div class="message" id="responseMessage"></div>
+    <button id="logoutButton">Logout</button>
+</div>
+
+<script>
+    // Store credentials
+    let credentials = '';
+
+    // Login Form Submission
+    document.getElementById('loginForm').addEventListener('submit', function(event){
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        credentials = btoa(`${username}:${password}`);
+
+        // Optionally, you can verify credentials here by making a test request
+        // For now, we'll assume the credentials are correct
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('joinLobby').style.display = 'block';
+    });
+
+    // Join Lobby Form Submission
+    document.getElementById('joinLobbyForm').addEventListener('submit', function(event){
+        event.preventDefault();
+        const lobbyCode = document.getElementById('lobbyCode').value;
+
+        fetch('http://52.233.82.13/Lobby/join', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Basic ${credentials}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ Code: lobbyCode })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text) });
+            }
+            return response.text();
+        })
+        .then(data => {
+            document.getElementById('responseMessage').innerText = data;
+            document.getElementById('responseMessage').className = 'message';
+        })
+        .catch(error => {
+            document.getElementById('responseMessage').innerText = error.message;
+            document.getElementById('responseMessage').className = 'error';
+        });
+    });
+
+    // Logout Button
+    document.getElementById('logoutButton').addEventListener('click', function(){
+        credentials = '';
+        document.getElementById('login').style.display = 'block';
+        document.getElementById('joinLobby').style.display = 'none';
+        document.getElementById('loginForm').reset();
+        document.getElementById('joinLobbyForm').reset();
+        document.getElementById('responseMessage').innerText = '';
+    });
+</script>
+
+</body>
+</html>
